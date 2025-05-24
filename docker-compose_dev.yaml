@@ -1,31 +1,17 @@
 version: '3.8'
 
 services:
-  user-db:
+  postgres:
     image: postgres:15
-    container_name: user-db
+    container_name: postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: root
-      POSTGRES_DB: user_service_db
     volumes:
-      - user_db_data:/var/lib/postgresql/data
+      - readoria_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5433:5432"
-    networks:
-      - backend
-
-  book-db:
-    image: postgres:15
-    container_name: book-db
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: root
-      POSTGRES_DB: book_service_db
-    volumes:
-      - book_db_data:/var/lib/postgresql/data
-    ports:
-      - "5434:5432"
     networks:
       - backend
 
@@ -35,7 +21,7 @@ services:
       dockerfile: Dockerfile
     container_name: user_service
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://user-db:5432/user_service_db
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/user_service_db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: root
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
@@ -43,7 +29,7 @@ services:
     ports:
       - "8081:8081"
     depends_on:
-      - user-db
+      - postgres
     networks:
       - backend
 
@@ -53,7 +39,7 @@ services:
       dockerfile: Dockerfile
     container_name: book_service
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://book-db:5432/book_service_db
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/book_service_db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: root
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
@@ -61,13 +47,12 @@ services:
     ports:
       - "8082:8082"
     depends_on:
-      - book-db
+      - postgres
     networks:
       - backend
 
 volumes:
-  user_db_data:
-  book_db_data:
+  readoria_data:
 
 networks:
   backend:
